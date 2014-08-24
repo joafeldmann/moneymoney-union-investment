@@ -88,12 +88,10 @@ function InitializeSession (protocol, bankCode, username, username2, password, u
   html = HTML(connection:get(baseUrl .. "?action=init"))
 
   if html:xpath("//table[@class='logged-in']"):length() == 0 then
-    return "Oops!"
+    return LoginFailed
   end
 
 end
-
-
 
 
 function ListAccounts (knownAccounts)
