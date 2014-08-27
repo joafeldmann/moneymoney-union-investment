@@ -59,11 +59,14 @@ local function strToAmount (str)
   return tonumber(str)
 end
 
+local function trim (s)
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
 
 --
 -- MoneyMoney API
 --
-
 
 function SupportsBank (protocol, bankCode)
   return true  -- Support any bank.
@@ -100,17 +103,17 @@ function ListAccounts (knownAccounts)
 
   -- Extract owner name
   local owner = html:xpath('//*[@id="contentC"]/div[2]/table[1]/tbody/tr/td[1]'):text()
-  owner = string.gsub(owner, "Angemeldet als:", "")
+  owner = trim(string.gsub(owner, "Angemeldet als:", ""))
 
   -- Extract depot base id
   local depot = html:xpath('//*[@id="contentC"]/div[2]/table[1]/tbody/tr/td[2]'):text()
-  depot = string.gsub(depot, "Aktuelles Depot:", "")
+  depot = trim(string.gsub(depot, "Aktuelles Depot:", ""))
 
   html:xpath('//*[@id="contentC"]/div[2]/table[2]/tbody/tr[position()>1][position()<last()]'):each(function (index, tr)
        
     local tds = tr:children()
-    local accountNumber = tds:get(1):text()
-    local name = tds:get(2):text()
+    local name = trim(tds:get(2):text())
+    local accountNumber = trim(tds:get(1):text())
 
     if string.len(accountNumber) > 0 then
       local account = {
@@ -158,16 +161,7 @@ function RefreshAccount (account, since)
       tHtml:xpath('//*[@id="contentC"]/div[2]/table[2]//tr[position()>1]'):each(function (index, tr)
         
         local tds = tr:children()
-
-        -- Create transaction object
-        -- local transaction = {          
-        --   bookingDate = strToDate(tds:get(1):text()),
-        --   valueDate   = strToDate(tds:get(1):text()),
-        --   name        = tds:get(2):text(),
-        --   amount      = amount,
-        --   purpose     = "Preis: " .. tds:get(4):text()
-        -- }
-         local transaction = {          
+        local transaction = {          
           currency    = "EUR",
           bookingDate = strToDate(tds:get(1):text()),
           valueDate   = strToDate(tds:get(1):text()),
