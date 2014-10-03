@@ -1,4 +1,3 @@
-
 --
 -- MoneyMoney Web Banking Extension
 -- http://moneymoney-app.com/api/webbanking
@@ -74,7 +73,7 @@ end
 
 
 function InitializeSession (protocol, bankCode, username, username2, password, username3)
-  
+
   connection = Connection()
 
   -- Fetch login page.
@@ -110,7 +109,7 @@ function ListAccounts (knownAccounts)
   depot = trim(string.gsub(depot, "Aktuelles Depot:", ""))
 
   html:xpath('//*[@id="contentC"]/div[2]/table[2]/tbody/tr[position()>1][position()<last()]'):each(function (index, tr)
-       
+
     local tds = tr:children()
     local name = trim(tds:get(2):text())
     local accountNumber = trim(tds:get(1):text())
@@ -144,7 +143,7 @@ function RefreshAccount (account, since)
 
   -- Locate account in list of accounts (Website I).
   html:xpath('//*[@id="contentC"]/div[2]/table[2]/tbody/tr[position()>1][position()<last()]'):each(function (index, tr)
-    local tds = tr:children()    
+    local tds = tr:children()
     local accountNumber = depot .. "-" .. tds:get(1):text()
     local name = tds:get(2):text()
 
@@ -159,8 +158,9 @@ function RefreshAccount (account, since)
 
       -- Traverse list of transactions
       tHtml:xpath('//*[@id="contentC"]/div[2]/table[2]//tr[position()>1]'):each(function (index, tr)
-        
+
         local tds = tr:children()
+<<<<<<< HEAD
         local transaction = {          
           currency    = "EUR",
           bookingDate = strToDate(tds:get(1):text()),
@@ -168,13 +168,20 @@ function RefreshAccount (account, since)
           name        = tds:get(2):text(),
           amount      = strToAmount(tds:get(5):text()),
           price       = strToAmount(tds:get(4):text())
+=======
+        local entry = {
+          tradeTimestamp = strToDate(tds:get(1):text()),
+          name           = tds:get(2):text(),
+          amount         = strToAmount(tds:get(5):text()),
+          price          = strToAmount(tds:get(4):text())
+>>>>>>> 13d952c... Trim whitespace.
         }
         table.insert(transactions, transaction)
 
       end)
 
     end
-    
+
   end)
 
   return {balance=balance, transactions=transactions}
