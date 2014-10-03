@@ -1,4 +1,3 @@
-
 --
 -- MoneyMoney Web Banking Extension
 -- http://moneymoney-app.com/api/webbanking
@@ -27,17 +26,17 @@
 -- THE SOFTWARE.
 --
 --
--- Get balance and transactions for UNION INVESTMENT FONDS
+-- Get portfolio for Union Investment.
 --
 
-WebBanking{version    = 1.0,
+WebBanking{version    = 1.00,
            country    = "de",
-           services   = { "Union Investment" }}
+           url         = "https://privatkunden.union-investment.de/process",
+           description = string.format(MM.localizeText("Get portfolio of %s"), "Union Investment")}
 
 
 local connection
 local html
-local baseUrl = "https://privatkunden.union-investment.de/process"
 
 --
 -- Utils
@@ -46,7 +45,7 @@ local baseUrl = "https://privatkunden.union-investment.de/process"
 local function strToDate (str)
   local d, m, y = string.match(str, "(%d%d)%.(%d%d)%.(%d%d%d%d)")
   if d and m and y then
-    return os.time{year=y, month=m, day=d}
+    return os.time{year=y, month=m, day=d, hour=0, min=0, sec=0}
   end
 end
 
@@ -69,16 +68,16 @@ end
 --
 
 function SupportsBank (protocol, bankCode)
-  return true  -- Support any bank.
+  return (bankCode == "50060400" or bankCode == "99951200") and protocol == ProtocolWebBanking
 end
 
 
 function InitializeSession (protocol, bankCode, username, username2, password, username3)
-  
+
   connection = Connection()
 
   -- Fetch login page.
-  html = HTML(connection:get(baseUrl .. "?action=showLogin"))
+  html = HTML(connection:get(url .. "?action=showLogin"))
 
   -- Fill in login credentials
   html:xpath("//input[@name='user']"):attr("value", username)
@@ -88,7 +87,7 @@ function InitializeSession (protocol, bankCode, username, username2, password, u
   html = HTML(connection:request(html:xpath("//form[@name='login']"):submit()))
 
   -- Follow redirect
-  html = HTML(connection:get(baseUrl .. "?action=init"))
+  html = HTML(connection:get(url .. "?action=init"))
 
   if html:xpath("//table[@class='logged-in']"):length() == 0 then
     return LoginFailed
@@ -110,7 +109,7 @@ function ListAccounts (knownAccounts)
   depot = trim(string.gsub(depot, "Aktuelles Depot:", ""))
 
   html:xpath('//*[@id="contentC"]/div[2]/table[2]/tbody/tr[position()>1][position()<last()]'):each(function (index, tr)
-       
+
     local tds = tr:children()
     local name = trim(tds:get(2):text())
     local accountNumber = trim(tds:get(1):text())
@@ -121,6 +120,7 @@ function ListAccounts (knownAccounts)
         accountNumber = depot .. "-" .. accountNumber,
         owner         = owner,
         currency      = "EUR",
+        portfolio     = true,
         type          = AccountTypePortfolio
       }
       table.insert(accounts, account)
@@ -134,8 +134,7 @@ end
 
 
 function RefreshAccount (account, since)
-  local balance
-  local transactions = {}
+  local securities = {}
 
   -- Extract depot base id
   local depot = html:xpath('//*[@id="contentC"]/div[2]/table[1]/tbody/tr/td[2]'):text()
@@ -144,43 +143,36 @@ function RefreshAccount (account, since)
 
   -- Locate account in list of accounts (Website I).
   html:xpath('//*[@id="contentC"]/div[2]/table[2]/tbody/tr[position()>1][position()<last()]'):each(function (index, tr)
-    local tds = tr:children()    
+    local tds = tr:children()
     local accountNumber = depot .. "-" .. tds:get(1):text()
     local name = tds:get(2):text()
 
     if accountNumber == account.accountNumber then
 
-      -- Extract balance
-      balance = tds:get(5):text();
-      balance = string.sub(balance, string.find(balance, "%S+"));
-      balance = strToAmount(balance)
-
-      local tHtml = HTML(connection:get(baseUrl .. "?action=showOrdersSummary&UDid=" .. index-1 ))
+      local tHtml = HTML(connection:get(url .. "?action=showOrdersSummary&UDid=" .. index-1 ))
 
       -- Traverse list of transactions
       tHtml:xpath('//*[@id="contentC"]/div[2]/table[2]//tr[position()>1]'):each(function (index, tr)
-        
+
         local tds = tr:children()
-        local transaction = {          
-          currency    = "EUR",
-          bookingDate = strToDate(tds:get(1):text()),
-          valueDate   = strToDate(tds:get(1):text()),
-          name        = tds:get(2):text(),
-          amount      = strToAmount(tds:get(5):text()),
-          price       = strToAmount(tds:get(4):text())
+        local entry = {
+          tradeTimestamp = strToDate(tds:get(1):text()),
+          name           = tds:get(2):text(),
+          amount         = strToAmount(tds:get(5):text()),
+          price          = strToAmount(tds:get(4):text())
         }
-        table.insert(transactions, transaction)
+        table.insert(securities, entry)
 
       end)
 
     end
-    
+
   end)
 
-  return {balance=balance, transactions=transactions}
+  return {securities=securities}
 end
 
 
 function EndSession ()
-  HTML(connection:get(baseUrl .. "?action=logout"))
+  HTML(connection:get(url .. "?action=logout"))
 end
