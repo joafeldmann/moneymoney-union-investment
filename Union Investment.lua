@@ -32,7 +32,6 @@
 
 WebBanking{version    = 1.00,
            country    = "de",
-           services   = { "Union Investment" },
            url         = "https://privatkunden.union-investment.de/process",
            description = string.format(MM.localizeText("Get portfolio of %s"), "Union Investment")}
 
@@ -70,7 +69,7 @@ end
 --
 
 function SupportsBank (protocol, bankCode)
-  return true  -- Support any bank.
+  return (bankCode == "50060400" or bankCode == "99951200") and protocol == ProtocolWebBanking
 end
 
 
