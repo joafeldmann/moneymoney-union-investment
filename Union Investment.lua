@@ -46,7 +46,7 @@ local html
 local function strToDate (str)
   local d, m, y = string.match(str, "(%d%d)%.(%d%d)%.(%d%d%d%d)")
   if d and m and y then
-    return os.time{year=y, month=m, day=d}
+    return os.time{year=y, month=m, day=d, hour=0, min=0, sec=0}
   end
 end
 
@@ -121,6 +121,7 @@ function ListAccounts (knownAccounts)
         accountNumber = depot .. "-" .. accountNumber,
         owner         = owner,
         currency      = "EUR",
+        portfolio     = true,
         type          = AccountTypePortfolio
       }
       table.insert(accounts, account)
@@ -134,8 +135,7 @@ end
 
 
 function RefreshAccount (account, since)
-  local balance
-  local transactions = {}
+  local securities = {}
 
   -- Extract depot base id
   local depot = html:xpath('//*[@id="contentC"]/div[2]/table[1]/tbody/tr/td[2]'):text()
@@ -150,26 +150,19 @@ function RefreshAccount (account, since)
 
     if accountNumber == account.accountNumber then
 
-      -- Extract balance
-      balance = tds:get(5):text();
-      balance = string.sub(balance, string.find(balance, "%S+"));
-      balance = strToAmount(balance)
-
       local tHtml = HTML(connection:get(url .. "?action=showOrdersSummary&UDid=" .. index-1 ))
 
       -- Traverse list of transactions
       tHtml:xpath('//*[@id="contentC"]/div[2]/table[2]//tr[position()>1]'):each(function (index, tr)
         
         local tds = tr:children()
-        local transaction = {          
-          currency    = "EUR",
-          bookingDate = strToDate(tds:get(1):text()),
-          valueDate   = strToDate(tds:get(1):text()),
-          name        = tds:get(2):text(),
-          amount      = strToAmount(tds:get(5):text()),
-          price       = strToAmount(tds:get(4):text())
+        local entry = {          
+          tradeTimestamp = strToDate(tds:get(1):text()),
+          name           = tds:get(2):text(),
+          amount         = strToAmount(tds:get(5):text()),
+          price          = strToAmount(tds:get(4):text())
         }
-        table.insert(transactions, transaction)
+        table.insert(securities, entry)
 
       end)
 
@@ -177,7 +170,7 @@ function RefreshAccount (account, since)
     
   end)
 
-  return {balance=balance, transactions=transactions}
+  return {securities=securities}
 end
 
 
