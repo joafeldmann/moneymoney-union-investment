@@ -27,12 +27,13 @@
 -- THE SOFTWARE.
 --
 --
--- Get balance and transactions for UNION INVESTMENT FONDS
+-- Get portfolio for Union Investment.
 --
 
-WebBanking{version    = 1.0,
+WebBanking{version    = 1.00,
            country    = "de",
-           services   = { "Union Investment" }}
+           services   = { "Union Investment" },
+           description = string.format(MM.localizeText("Get portfolio of %s"), "Union Investment")}
 
 
 local connection
