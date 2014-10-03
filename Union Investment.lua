@@ -33,12 +33,12 @@
 WebBanking{version    = 1.00,
            country    = "de",
            services   = { "Union Investment" },
+           url         = "https://privatkunden.union-investment.de/process",
            description = string.format(MM.localizeText("Get portfolio of %s"), "Union Investment")}
 
 
 local connection
 local html
-local baseUrl = "https://privatkunden.union-investment.de/process"
 
 --
 -- Utils
@@ -79,7 +79,7 @@ function InitializeSession (protocol, bankCode, username, username2, password, u
   connection = Connection()
 
   -- Fetch login page.
-  html = HTML(connection:get(baseUrl .. "?action=showLogin"))
+  html = HTML(connection:get(url .. "?action=showLogin"))
 
   -- Fill in login credentials
   html:xpath("//input[@name='user']"):attr("value", username)
@@ -89,7 +89,7 @@ function InitializeSession (protocol, bankCode, username, username2, password, u
   html = HTML(connection:request(html:xpath("//form[@name='login']"):submit()))
 
   -- Follow redirect
-  html = HTML(connection:get(baseUrl .. "?action=init"))
+  html = HTML(connection:get(url .. "?action=init"))
 
   if html:xpath("//table[@class='logged-in']"):length() == 0 then
     return LoginFailed
@@ -156,7 +156,7 @@ function RefreshAccount (account, since)
       balance = string.sub(balance, string.find(balance, "%S+"));
       balance = strToAmount(balance)
 
-      local tHtml = HTML(connection:get(baseUrl .. "?action=showOrdersSummary&UDid=" .. index-1 ))
+      local tHtml = HTML(connection:get(url .. "?action=showOrdersSummary&UDid=" .. index-1 ))
 
       -- Traverse list of transactions
       tHtml:xpath('//*[@id="contentC"]/div[2]/table[2]//tr[position()>1]'):each(function (index, tr)
@@ -183,5 +183,5 @@ end
 
 
 function EndSession ()
-  HTML(connection:get(baseUrl .. "?action=logout"))
+  HTML(connection:get(url .. "?action=logout"))
 end
