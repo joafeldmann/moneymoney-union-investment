@@ -160,7 +160,6 @@ function RefreshAccount (account, since)
       tHtml:xpath('//*[@id="contentC"]/div[2]/table[2]//tr[position()>1]'):each(function (index, tr)
 
         local tds = tr:children()
-<<<<<<< HEAD
         local transaction = {          
           currency    = "EUR",
           bookingDate = strToDate(tds:get(1):text()),
@@ -168,13 +167,6 @@ function RefreshAccount (account, since)
           name        = tds:get(2):text(),
           amount      = strToAmount(tds:get(5):text()),
           price       = strToAmount(tds:get(4):text())
-=======
-        local entry = {
-          tradeTimestamp = strToDate(tds:get(1):text()),
-          name           = tds:get(2):text(),
-          amount         = strToAmount(tds:get(5):text()),
-          price          = strToAmount(tds:get(4):text())
->>>>>>> 13d952c... Trim whitespace.
         }
         table.insert(transactions, transaction)
 
