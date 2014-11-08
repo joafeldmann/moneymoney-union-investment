@@ -20,7 +20,7 @@ Danach kannst du unter *Konto* > *Konto hinzufügen* dein Union Investment Depot
 Fragen oder Probleme?
 ---------------------
 
-Falls du Fragen zur Extension hast, mache bitte hier auf Github ein Ticket auf.
+Falls du Fragen zur Extension hast, mache bitte hier auf Github ein [Ticket](https://github.com/joafeldmann/moneymoney-union-investment/issues/new) auf.
 
 Lizenz
 ------
